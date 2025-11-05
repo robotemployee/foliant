@@ -1,0 +1,15 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.robotemployee.foliant.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "refmap": "foliant.refmap.json",
+  "mixins": [
+    "base.MoveControlAccessor"
+  ],
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
