@@ -84,10 +84,23 @@ public abstract class FoliantRaidMob extends Monster {
     protected void applyPowerBuffs(float power) {
         applyPowerHealthBuff(power);
         applyPowerDamageBuff(power);
+        applyPowerSpeedBuff(power);
+    }
+
+    public boolean recievesHealthScalingWithPower() {
+        return true;
+    }
+    public boolean recievesDamageScalingWithPower() {
+        return true;
+    }
+
+    public boolean recievesSpeedScalingWithPower() {
+        return true;
     }
 
     public static final UUID HEALTH_POWER_MODIFIER_UUID = UUID.fromString("4a2063fc-418d-40e2-adcb-e41011fca417");
     protected void applyPowerHealthBuff(float power) {
+        if (!recievesHealthScalingWithPower()) return;
         if (power < 1) return;
         double multiplier = Math.min(6, 1 + (power * power) * 0.001);
 
@@ -105,6 +118,7 @@ public abstract class FoliantRaidMob extends Monster {
 
     public static final UUID DAMAGE_POWER_MODIFIER_UUID = UUID.fromString("7470fc32-423b-4f09-a95e-64a53426bcde");
     protected void applyPowerDamageBuff(float power) {
+        if (!recievesDamageScalingWithPower()) return;
         if (power < 1) return;
         double multiplier = Math.min(6, 1 + (power * power) * 0.001);
 
@@ -118,6 +132,36 @@ public abstract class FoliantRaidMob extends Monster {
                 multiplier - 1,
                 AttributeModifier.Operation.MULTIPLY_BASE
         ));
+    }
+
+    public static final UUID SPEED_POWER_MODIFIER_UUID = UUID.fromString("fb96b6eb-13d6-4abb-9122-dde22b4566e6");
+    protected void applyPowerSpeedBuff(float power) {
+        if (!recievesSpeedScalingWithPower()) return;
+        if (power < 1) return;
+
+        double multiplier = Math.pow(Math.pow(power * 0.08, 0.68) * 0.05 + 1, 1.5);
+
+        AttributeInstance groundSpeed = getAttribute(Attributes.MOVEMENT_SPEED);
+
+        if (groundSpeed != null) {
+            groundSpeed.addPermanentModifier(new AttributeModifier(
+                    SPEED_POWER_MODIFIER_UUID,
+                    "Ground speed bonus from raid power",
+                    multiplier - 1,
+                    AttributeModifier.Operation.MULTIPLY_BASE
+            ));
+        }
+
+        AttributeInstance flightSpeed = getAttribute(Attributes.FLYING_SPEED);
+
+        if (flightSpeed != null) {
+            flightSpeed.addPermanentModifier(new AttributeModifier(
+                    SPEED_POWER_MODIFIER_UUID,
+                    "Flight speed bonus from raid power",
+                    multiplier - 1,
+                    AttributeModifier.Operation.MULTIPLY_BASE
+            ));
+        }
     }
 
     // Devil Protection
@@ -185,6 +229,20 @@ public abstract class FoliantRaidMob extends Monster {
         return ticksWantedParentRaidButAlone > TICKS_UNTIL_DIE_OF_LONELINESS && needsRaidParent && (!isInRaid() || getParentRaid().isPoop());
     }
 
+    public void tickPowerBuffs() {
+        if (tickCount % 200 > 0) return;
+        if (!isInRaid()) return;
+        applyPowerBuffs(getParentRaid().getPowerFloat());
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+
+        if (shouldIDieRightNow()) kill();
+
+    }
+
     @Nullable
     @Override
     public SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty, MobSpawnType spawnType, @Nullable SpawnGroupData groupData, @Nullable CompoundTag tag) {
@@ -197,12 +255,5 @@ public abstract class FoliantRaidMob extends Monster {
             needsRaidParent = false;
         }
         return super.finalizeSpawn(level, difficulty, spawnType, groupData, tag);
-    }
-
-    @Override
-    public void tick() {
-        super.tick();
-
-        if (shouldIDieRightNow()) kill();
     }
 }

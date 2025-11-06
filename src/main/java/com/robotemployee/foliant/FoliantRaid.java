@@ -32,9 +32,7 @@ public class FoliantRaid {
     // make them mine or make an explosion or something if there are no valid paths anywhere
     // ... though asteirto might help with that
 
-    // spawns per minute system: based on the power, there is a target "spawns per minute"
-    // spawners automatically adjust their spawn time by taking this rate and dividing it by the amount of spawners
-    // amount of spawners = power / 5 or something, max to 6 i'd say
+    // by default, 40s per unit of power.
 
     private static final Logger LOGGER = LogUtils.getLogger();
 
@@ -376,7 +374,7 @@ public class FoliantRaid {
     public enum EnemyType {
         GREG(ModEntities.GREG::get, 3, 8, 1, 4, 60),
         DEVIL(ModEntities.DEVIL::get, 1, 4, 5, 1, 400),
-        ASTEIRTO(ModEntities.ASTEIRTO::get, 1, 2, 15, 2, 1600),
+        ASTEIRTO(ModEntities.ASTEIRTO::get, 1, 2, 15, 2, 2400),
         // posterboy is a special enemy and does not spawn normally
         POSTERBOY(ModEntities.GREG::get, 1, 0, 0, 0, 0),
         // todo add amelie
