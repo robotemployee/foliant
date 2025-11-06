@@ -103,6 +103,8 @@ public class Spawner {
         if (isPoop()) return;
         revalidateIfReady();
         if (isPoop()) return;
+        //fixme logger
+        LOGGER.info("Populating queue and doing spawns");
         populateQueueIfNeeded();
         doSpawns();
     }
@@ -159,7 +161,8 @@ public class Spawner {
     }
 
     protected boolean isReadyToSpawn() {
-        //LOGGER.info("checking spawn readiness: " + parentRaid.isReadyToSpawn() + " " + (ticksUntilNextSpawn <= 0) + " ticks: " + ticksUntilNextSpawn);
+        // fixme logger
+        LOGGER.info("checking spawn readiness: " + parentRaid.isReadyToSpawn() + " " + (ticksUntilNextSpawn <= 0) + " ticks: " + ticksUntilNextSpawn);
         return parentRaid.isReadyToSpawn() && ticksUntilNextSpawn <= 0;
     }
 
@@ -247,7 +250,8 @@ public class Spawner {
     protected void spawnNextEntry() {
         SpawnEntry entry = queue.removeLast();
 
-        //LOGGER.info("Spawning the next entry in the queue: " + entry);
+        // fixme logger
+        LOGGER.info("Spawning the next entry in the queue: " + entry);
 
         entry.get().forEach(e -> {
             EntityType<? extends FoliantRaidMob> entityType = e.getKey();

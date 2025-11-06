@@ -137,7 +137,8 @@ public class FoliantRaid {
     protected void tickSpawners() {
         // this function is responsible for placing new spawners and ticking existing ones
 
-
+        //fixme logger
+        LOGGER.info(String.format("Ticking %s spawners. Power: %s", spawners.size(), getPower()));
 
         Iterator<Map.Entry<BlockPos, Spawner>> iterator = spawners.entrySet().iterator();
         while (iterator.hasNext()) {
@@ -158,6 +159,8 @@ public class FoliantRaid {
         int amountOfSpawners = spawners.size();
         // amount of spawners = power / 10
         int desiredSpawners = ((int)power / 10) + 1;
+        // fixme logger
+        LOGGER.info("Desired spawners: " + desiredSpawners);
         //LOGGER.info("desiredSpawners: " + desiredSpawners + " amountOfSpawners: " + amountOfSpawners);
         if (amountOfSpawners < desiredSpawners) {
             int spawnersLeftToCreate = desiredSpawners - amountOfSpawners;
