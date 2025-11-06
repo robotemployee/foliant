@@ -74,7 +74,9 @@ public class FoliantRaidLevelManager extends SavedData {
         for (FoliantRaid raid : getRaids()) raid.init(level, this);
     }
 
-    public void tick(ServerLevel level) {
+    public void tick() {
+        // fixme logger
+        LOGGER.info("ticking foliant raids!");
         getRaids().forEach(FoliantRaid::tick);
     }
 

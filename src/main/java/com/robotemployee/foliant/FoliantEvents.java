@@ -12,10 +12,13 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraftforge.event.RegisterCommandsEvent;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.ProjectileImpactEvent;
 import net.minecraftforge.event.level.LevelEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
 
+@Mod.EventBusSubscriber(modid = Foliant.MODID)
 public class FoliantEvents {
     @SubscribeEvent
     public static void onLevelLoad(LevelEvent.Load event) {
@@ -27,6 +30,12 @@ public class FoliantEvents {
     public static void onLevelUnload(LevelEvent.Unload event) {
         if (!(event.getLevel() instanceof ServerLevel serverLevel)) return;
         FoliantRaidServerManager.removeManager(serverLevel);
+    }
+
+    @SubscribeEvent
+    public static void onTick(TickEvent.LevelTickEvent event) {
+        if (event.phase != TickEvent.Phase.END) return;
+        FoliantRaidServerManager.tick(event);
     }
 
     @SubscribeEvent

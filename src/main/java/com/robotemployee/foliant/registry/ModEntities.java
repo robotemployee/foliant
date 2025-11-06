@@ -35,7 +35,8 @@ public class ModEntities {
     public static final DeferredRegister<EntityType<?>> ENTITIES =
             DeferredRegister.create(ForgeRegistries.ENTITY_TYPES, Foliant.MODID);
 
-    public static final EntityBuilder.Manager MANAGER = new EntityBuilder.Manager(Foliant.DATAGEN, ENTITIES, ModItems.MANAGER);
+    public static final EntityBuilder.Manager MANAGER = new EntityBuilder.Manager(Foliant.DATAGEN, ENTITIES, ModItems.MANAGER)
+            .withRendererReciever(Foliant.ClientModEvents::addCustomRenderer);
 
     public static final int FOLIANT_EGG_COLOR = 0xE2EE1A;
 

@@ -13,7 +13,6 @@ import org.slf4j.Logger;
 
 import java.util.HashMap;
 
-@Mod.EventBusSubscriber(modid = RobotEmployeeUtils.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class FoliantRaidServerManager {
 
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -24,11 +23,9 @@ public class FoliantRaidServerManager {
         return MANAGERS.computeIfAbsent(level.dimension(), k -> FoliantRaidLevelManager.onLevelLoaded(level));
     }
 
-    @SubscribeEvent
     public static void tick(TickEvent.LevelTickEvent event) {
-        if (event.phase != TickEvent.Phase.END) return;
         if (!(event.level instanceof ServerLevel serverLevel)) return;
-        getLevelManager(serverLevel).tick(serverLevel);
+        getLevelManager(serverLevel).tick();
     }
 
     @SubscribeEvent
