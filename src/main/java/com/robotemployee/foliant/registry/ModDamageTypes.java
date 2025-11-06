@@ -1,7 +1,6 @@
 package com.robotemployee.foliant.registry;
 
 import com.robotemployee.foliant.Foliant;
-import com.robotemployee.reu.core.RobotEmployeeUtils;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;

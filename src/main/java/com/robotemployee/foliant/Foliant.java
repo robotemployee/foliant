@@ -2,8 +2,10 @@ package com.robotemployee.foliant;
 
 import com.mojang.logging.LogUtils;
 import com.robotemployee.foliant.registry.*;
+import com.robotemployee.reu.util.datagen.DatagenInstance;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.data.event.GatherDataEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -20,6 +22,8 @@ public class Foliant {
 
     // Define mod id in a common place for everything to reference
     public static final String MODID = "foliant";
+    public static final DatagenInstance DATAGEN = new DatagenInstance(MODID);
+
     // Directly reference a slf4j logger
     private static final Logger LOGGER = LogUtils.getLogger();
     // Create a Deferred Register to hold Blocks which will all be registered under the "foliant" namespace
@@ -71,6 +75,18 @@ public class Foliant {
 
     }
 
+    @SubscribeEvent
+    public static void onGatherData(GatherDataEvent event) {
+        DATAGEN.run(event);
+    }
+
+    @Mod.EventBusSubscriber(modid = Foliant.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
+    public static class ModEvents {
+        @SubscribeEvent
+        public static void onGatherData(GatherDataEvent event) {
+            DATAGEN.run(event);
+        }
+    }
 
     // You can use EventBusSubscriber to automatically register all static methods in the class annotated with @SubscribeEvent
     @Mod.EventBusSubscriber(modid = MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)

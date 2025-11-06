@@ -1,6 +1,8 @@
 package com.robotemployee.foliant.registry;
 
 import com.robotemployee.foliant.Foliant;
+import com.robotemployee.reu.util.registry.builder.CreativeTabBuilder;
+import com.robotemployee.reu.util.registry.entry.CreativeTabMutableRegistryEntry;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.CreativeModeTab;
@@ -15,29 +17,13 @@ import java.util.function.Supplier;
 
 public class ModCreativeModeTabs {
 
-    private static final ArrayList<Supplier<Item>> addedItems = new ArrayList<>();
-
     public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, Foliant.MODID);
-    public static final RegistryObject<CreativeModeTab> CREATIVE_TAB = CREATIVE_MODE_TABS.register("reu_tab",
-            () -> CreativeModeTab.builder()
-                    .icon(() -> new ItemStack(Items.ACACIA_PLANKS))
-                    .title(Component.translatable("creativetab.reu_tab"))
-                    .displayItems((parameters, output) -> {
-                        //output.accept(ModItems.RECONSTRUCTOR.get());
-                        //output.accept(ModItems.SCULK_RECONSTRUCTOR.get());
-                        //output.accept(ModItems.INJECTOR.get());
-                        //output.accept(ModBlocks.BLANK_EGG.getItem());
-                        //output.accept(ModBlocks.INFUSED_EGG.getItem());
-                        for (Supplier<Item> item : addedItems) output.accept(item.get());
-                    })
-                    .build()
-    );
 
-    public static ArrayList<Supplier<Item>> getAddedItems() {
-        return addedItems;
-    }
+    public static final CreativeTabBuilder.Manager MANAGER = new CreativeTabBuilder.Manager(CREATIVE_MODE_TABS, Foliant.MODID);
 
-    public static void addItem(Supplier<Item> item) {
-        addedItems.add(item);
-    }
+    public static final CreativeTabMutableRegistryEntry CREATIVE_TAB = MANAGER.createBuilder()
+            .withName(Foliant.MODID)
+            .withIcon(() -> new ItemStack(ModItems.SEMISOLID.get()))
+            .withTitle(Component.literal("Foliant"))
+            .build();
 }

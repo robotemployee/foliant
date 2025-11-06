@@ -1,25 +1,18 @@
 package com.robotemployee.foliant.registry;
 
 import com.mojang.logging.LogUtils;
-import com.robotemployee.foliant.Foliant;
-import com.robotemployee.reu.util.datagen.Datagen;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.AdvancementProgress;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientAdvancements;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.Items;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
-
-import java.util.function.Supplier;
 
 public class ModAdvancements {
 
@@ -31,13 +24,6 @@ public class ModAdvancements {
     static Logger LOGGER = LogUtils.getLogger();
 
 
-    private static ResourceLocation lastDiscLoc = null;
-    public static ResourceLocation createDiscAdvancement(String id, Supplier<Item> supplier, Component desc) {
-        //LOGGER.info("Creating disc advancement with ID " + id);
-        ResourceLocation newborn = Datagen.ModAdvancementProvider.simpleItemObtainedAdvancement(new ResourceLocation(Foliant.MODID, id), supplier, desc, lastDiscLoc);
-        lastDiscLoc = newborn;
-        return newborn;
-    }
 
     @OnlyIn(Dist.CLIENT)
     public static Advancement getAdvancementClient(ResourceLocation loc) {

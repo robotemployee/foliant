@@ -35,50 +35,57 @@ public class ModEntities {
     public static final DeferredRegister<EntityType<?>> ENTITIES =
             DeferredRegister.create(ForgeRegistries.ENTITY_TYPES, Foliant.MODID);
 
-    public static final int BANANA_EGG_COLOR = 0xE2EE1A;
+    public static final EntityBuilder.Manager MANAGER = new EntityBuilder.Manager(Foliant.DATAGEN, ENTITIES, ModItems.MANAGER);
+
+    public static final int FOLIANT_EGG_COLOR = 0xE2EE1A;
 
     public static final EntityRegistryEntry<DevilEntity> DEVIL =
-            new EntityBuilder<>(
+            MANAGER.<DevilEntity>createBuilder()
+                    .withTypeSupplier(
                     () -> EntityType.Builder.of(DevilEntity::new, MobCategory.MONSTER)
                             .sized(0.5f, 0.5f))
                     .withName("devil")
                     .withAttributes(DevilEntity::createAttributes)
                     .customRenderer(DevilRenderer::new)
-                    .eggColor(0x4CC9E1, BANANA_EGG_COLOR)
+                    .eggColor(0x4CC9E1, FOLIANT_EGG_COLOR)
                     .build();
 
     public static final EntityRegistryEntry<GregEntity> GREG =
-            new EntityBuilder<>(
+            MANAGER.<GregEntity>createBuilder()
+                    .withTypeSupplier(
                     () -> EntityType.Builder.of(GregEntity::new, MobCategory.MONSTER)
                             .sized(1, 0.65f))
                     .withName("greg")
                     .withAttributes(GregEntity::createAttributes)
                     .customRenderer(GregRenderer::new)
-                    .eggColor(0xAC3232, BANANA_EGG_COLOR)
+                    .eggColor(0xAC3232, FOLIANT_EGG_COLOR)
                     .build();
 
     public static final EntityRegistryEntry<AsteirtoEntity> ASTEIRTO =
-            new EntityBuilder<>(
+            MANAGER.<AsteirtoEntity>createBuilder()
+                    .withTypeSupplier(
                     () -> EntityType.Builder.of(AsteirtoEntity::new, MobCategory.MONSTER)
                             .sized(2, 2.5f))
                     .withName("asteirto")
                     .withAttributes(AsteirtoEntity::createAttributes)
                     .customRenderer(AsteirtoRenderer::new)
-                    .eggColor(0x9BE468, BANANA_EGG_COLOR)
+                    .eggColor(0x9BE468, FOLIANT_EGG_COLOR)
                     .build();
 
     public static final EntityRegistryEntry<AmelieEntity> AMELIE =
-            new EntityBuilder<>(
+            MANAGER.<AmelieEntity>createBuilder()
+                    .withTypeSupplier(
                     () -> EntityType.Builder.of(AmelieEntity::new, MobCategory.MONSTER)
                             .sized(2, 2.5f))
                     .withName("amelie")
                     .withAttributes(AmelieEntity::createAttributes)
                     .customRenderer(AmelieRenderer::new)
-                    .eggColor(0x9BE468, BANANA_EGG_COLOR)
+                    .eggColor(0x9BE468, FOLIANT_EGG_COLOR)
                     .build();
 
     public static final EntityRegistryEntry<ThrownSemisolidEntity> THROWN_SEMISOLID =
-            new EntityBuilder<>(
+            MANAGER.<ThrownSemisolidEntity>createBuilder()
+                    .withTypeSupplier(
                     () -> EntityType.Builder.of(ThrownSemisolidEntity::new, MobCategory.MISC)
                             .sized(0.5f, 0.5f))
                     .withName("thrown_item")
