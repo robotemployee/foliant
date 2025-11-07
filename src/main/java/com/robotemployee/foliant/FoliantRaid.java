@@ -94,21 +94,24 @@ public class FoliantRaid {
         startForceloadingChunks();
     }
 
-    private static final String EPICENTER_PATH = "Epicenter";
-    private static final String SPAWNED_ENTITIES_PATH = "SpawnedEntityUUIDs";
-    private static final String SPAWNERS_PATH = "Spawners";
+    public static final String EPICENTER_PATH = "Epicenter";
+    public static final String SPAWNED_ENTITIES_PATH = "SpawnedEntityUUIDs";
+    public static final String SPAWNERS_PATH = "Spawners";
+    public static final String POWER_PATH = "Power";
+
 
     public CompoundTag save(CompoundTag tag) {
+        tag.putLong(EPICENTER_PATH, epicenter.asLong());
+
         ListTag spawnedEntitiesTag = new ListTag();
         for (UUID uuid: spawnedEntities) spawnedEntitiesTag.add(NbtUtils.createUUID(uuid));
         tag.put(SPAWNED_ENTITIES_PATH, spawnedEntitiesTag);
 
         ListTag spawnersTag = new ListTag();
         for (BlockPos pos : getSpawners()) spawnersTag.add(NbtUtils.writeBlockPos(pos));
-        tag.put(SPAWNED_ENTITIES_PATH, spawnersTag);
+        tag.put(SPAWNERS_PATH, spawnersTag);
 
-        //tag.putUUID(RAID_UUID_PATH, raidUUID);
-        tag.putLong(EPICENTER_PATH, epicenter.asLong());
+        tag.putFloat(POWER_PATH, power);
 
         return tag;
     }
@@ -124,6 +127,8 @@ public class FoliantRaid {
 
         ListTag existingSpawners = tag.getList(SPAWNERS_PATH, Tag.TAG_COMPOUND);
         for (Tag value : existingSpawners) newborn.createSpawner(NbtUtils.readBlockPos((CompoundTag) value));
+
+        newborn.setPowerFloat(tag.getFloat(POWER_PATH));
 
         return newborn;
     }
@@ -360,6 +365,10 @@ public class FoliantRaid {
         power = newPower;
     }
 
+    public void setPowerFloat(float newPower) {
+        power = newPower;
+    }
+
     // i know. im lazy
     public int getPower() {
         return (int)Math.floor(power);
@@ -460,6 +469,11 @@ public class FoliantRaid {
 
         public EntityType<? extends FoliantRaidMob> getEntityType() {
             return registry.get();
+        }
+
+        @Nullable
+        public static EnemyType getFromEntityType(EntityType<? extends FoliantRaidMob> entityType) {
+            return Arrays.stream(EnemyType.values()).filter(enemyType -> enemyType.getEntityType() == entityType).findFirst().orElse(null);
         }
 
         public <T extends FoliantRaidMob> T create(ServerLevel level) {

@@ -30,7 +30,7 @@ public abstract class FoliantRaidMob extends Monster {
     public static final int TICKS_UNTIL_DIE_OF_OLD_AGE = 720000;
 
     protected FoliantRaid parentRaid;
-    protected boolean needsRaidParent = true;
+    protected boolean needsParentRaid = true;
 
     // im spaced out okay
     protected final ArrayList<WeakReference<DevilEntity>> devilsProtectingMe = new ArrayList<>();
@@ -45,6 +45,15 @@ public abstract class FoliantRaidMob extends Monster {
 
     public boolean isInRaid() {
         return getParentRaid() != null;
+    }
+
+    public boolean needsParentRaid() {
+        return needsParentRaid;
+    }
+
+    public void makeIndependentOfRaid() {
+        needsParentRaid = false;
+        parentRaid = null;
     }
 
     public void init(@NotNull FoliantRaid parentRaid) {
@@ -180,9 +189,9 @@ public abstract class FoliantRaidMob extends Monster {
     int ticksWantedParentRaidButAlone = 0;
     public static final int TICKS_UNTIL_DIE_OF_LONELINESS = 20;
     public boolean shouldIDieRightNow() {
-        if (needsRaidParent && !isInRaid()) ticksWantedParentRaidButAlone++;
+        if (needsParentRaid() && !isInRaid()) ticksWantedParentRaidButAlone++;
         else ticksWantedParentRaidButAlone = 0;
-        return ticksWantedParentRaidButAlone > TICKS_UNTIL_DIE_OF_LONELINESS && needsRaidParent && (!isInRaid() || getParentRaid().isPoop());
+        return ticksWantedParentRaidButAlone > TICKS_UNTIL_DIE_OF_LONELINESS && needsParentRaid() && (!isInRaid() || getParentRaid().isPoop());
     }
 
     @Nullable
@@ -194,7 +203,7 @@ public abstract class FoliantRaidMob extends Monster {
                 spawnType == MobSpawnType.COMMAND ||
                 spawnType == MobSpawnType.DISPENSER ||
                 spawnType == MobSpawnType.SPAWNER) {
-            needsRaidParent = false;
+            makeIndependentOfRaid();
         }
         return super.finalizeSpawn(level, difficulty, spawnType, groupData, tag);
     }

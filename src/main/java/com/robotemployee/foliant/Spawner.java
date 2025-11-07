@@ -16,7 +16,6 @@ import org.slf4j.Logger;
 
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class Spawner {
 
@@ -33,7 +32,7 @@ public class Spawner {
 
     protected ArrayList<BlockPos> positions = new ArrayList<>();
 
-    protected final Deque<SpawnEntry> queue = new ArrayDeque<>();
+    protected final Deque<GroupSpawnEntry> queue = new ArrayDeque<>();
 
     public final BlockPos center;
     public final ServerLevel level;
@@ -103,8 +102,7 @@ public class Spawner {
         if (isPoop()) return;
         revalidateIfReady();
         if (isPoop()) return;
-        //fixme logger
-        LOGGER.info("Populating queue and doing spawns");
+        //LOGGER.info("Populating queue and doing spawns");
         populateQueueIfNeeded();
         doSpawns();
     }
@@ -161,9 +159,8 @@ public class Spawner {
     }
 
     protected boolean isReadyToSpawn() {
-        // fixme logger
-        LOGGER.info("checking spawn readiness: " + parentRaid.isReadyToSpawn() + " " + (ticksUntilNextSpawn <= 0) + " ticks: " + ticksUntilNextSpawn);
-        return parentRaid.isReadyToSpawn() && ticksUntilNextSpawn <= 0;
+        //LOGGER.info("checking spawn readiness: " + parentRaid.isReadyToSpawn() + " " + (ticksUntilNextSpawn <= 0) + " ticks: " + ticksUntilNextSpawn);
+        return parentRaid.isReadyToSpawn() && ticksUntilNextSpawn <= 0 && !isPoop();
     }
 
     protected void populateQueueIfNeeded() {
@@ -173,12 +170,12 @@ public class Spawner {
 
         //LOGGER.info("POPULATING QUEUE...");
 
-        SpawnEntry entry = generateEntry();
+        GroupSpawnEntry entry = generateEntry();
         addToQueue(entry);
     }
 
-    protected SpawnEntry generateEntry() {
-        SpawnEntry result = new SpawnEntry();
+    protected GroupSpawnEntry generateEntry() {
+        GroupSpawnEntry result = new GroupSpawnEntry();
         int power = getPower();
         IntegerWeightedRandomList<FoliantRaid.EnemyType> candidates = populateWeightedCandidates(new IntegerWeightedRandomList<>(), power);
 
@@ -187,7 +184,7 @@ public class Spawner {
             FoliantRaid.EnemyType enemyTypeToSpawn = candidates.pickRandom(level.getRandom());
             int amountToSpawn = enemyTypeToSpawn.getAmountToSpawn();
 
-            result.add(enemyTypeToSpawn.getEntityType(), amountToSpawn);
+            result.add(enemyTypeToSpawn, amountToSpawn);
             // fixme get rid of this SHITASS SOLUTION and put this somewhere it's actually being added to the queue
             parentRaid.incrementPopulation(enemyTypeToSpawn, amountToSpawn);
             parentRaid.addSpawnCooldownFor(enemyTypeToSpawn, amountToSpawn);
@@ -223,6 +220,7 @@ public class Spawner {
     }
 
     public BlockPos getRandomSpawnPosition() {
+        //LOGGER.info("positions size: " + positions.size());
         int index = level.getRandom().nextInt(positions.size());
         return positions.get(index);
     }
@@ -231,15 +229,15 @@ public class Spawner {
         ticksUntilNextSpawn = 0;
     }
 
-    public void addToQueue(SpawnEntry spawnEntry) {
-        queue.addFirst(spawnEntry);
+    public void addToQueue(GroupSpawnEntry groupSpawnEntry) {
+        queue.addFirst(groupSpawnEntry);
     }
 
-    public void addToQueue(Collection<SpawnEntry> otherQueue) {
+    public void addToQueue(Collection<GroupSpawnEntry> otherQueue) {
         queue.addAll(otherQueue);
     }
 
-    public Deque<SpawnEntry> getQueue() {
+    public Deque<GroupSpawnEntry> getQueue() {
         return queue;
     }
 
@@ -248,13 +246,12 @@ public class Spawner {
     }
 
     protected void spawnNextEntry() {
-        SpawnEntry entry = queue.removeLast();
+        GroupSpawnEntry entry = queue.removeLast();
 
-        // fixme logger
-        LOGGER.info("Spawning the next entry in the queue: " + entry);
+        //LOGGER.info("Spawning the next entry in the queue: " + entry);
 
         entry.get().forEach(e -> {
-            EntityType<? extends FoliantRaidMob> entityType = e.getKey();
+            EntityType<? extends FoliantRaidMob> entityType = e.getKey().getEntityType();
             int amount = e.getValue();
             //LOGGER.info(String.format("Spawning %sx %s...", amount, entityType));
 
@@ -277,7 +274,7 @@ public class Spawner {
     }
 
     public boolean isPoop() {
-        return isPoop;
+        return isPoop && !positions.isEmpty();
     }
 
     public boolean canReachEpicenter() {
@@ -285,31 +282,47 @@ public class Spawner {
     }
 
     public void onRemoved() {
+        wipeQueueAndNotifyRaid();
+    }
 
+    // since they are considered part of the population while they're only in the queue,
+    // we need to remove them from the population when the queue is cleared
+    // so that those positions are opened up for the others
+    public void wipeQueueAndNotifyRaid() {
+        Iterator<GroupSpawnEntry> iterator = queue.iterator();
+
+        while (iterator.hasNext()) {
+            GroupSpawnEntry entry = iterator.next();
+            entry.get().forEach(enemyEntry -> {
+                FoliantRaid.EnemyType type = enemyEntry.getKey();
+                parentRaid.decrementPopulation(type, enemyEntry.getValue());
+            });
+            iterator.remove();
+        }
     }
 
     // in hindsight this isn't really necessary to make its own class
     // i was unsure of how i wanted to represent queued spawns, and i've been developing it with a class and...
     // it's not gonna be unperformant or anything, it'll just be weird. that's fine
-    public static class SpawnEntry {
+    public static class GroupSpawnEntry {
         // in one bundle, you can spawn different amounts of different enemy types
         // this will make it easier to scale later
-        private final HashMap<EntityType<? extends FoliantRaidMob>, Integer> enemiesToSpawn = new HashMap<>();
+        private final HashMap<FoliantRaid.EnemyType, Integer> enemiesToSpawn = new HashMap<>();
 
-        private SpawnEntry() {
+        private GroupSpawnEntry() {
 
         }
 
-        public static SpawnEntry of() {
-            return new SpawnEntry();
+        public static GroupSpawnEntry of() {
+            return new GroupSpawnEntry();
         }
 
-        public void add(EntityType<? extends FoliantRaidMob> mob, Integer amount) {
-            enemiesToSpawn.compute(mob, (key, value) -> value == null ? amount : amount + value);
+        public void add(FoliantRaid.EnemyType enemyType, Integer amount) {
+            enemiesToSpawn.compute(enemyType, (key, value) -> value == null ? amount : amount + value);
         }
 
-        public Stream<Map.Entry<EntityType<? extends FoliantRaidMob>, Integer>> get() {
-            return enemiesToSpawn.entrySet().stream();
+        public Set<Map.Entry<FoliantRaid.EnemyType, Integer>> get() {
+            return enemiesToSpawn.entrySet();
         }
 
         @Override

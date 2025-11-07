@@ -40,7 +40,13 @@ public class AmelieEntity extends FlyingFoliantRaidMob implements GeoEntity {
     public static final int MAX_CONSECUTIVE_DODGES = 2;
     public static final int CONSECUTIVE_DODGE_TIMEOUT = 60;
 
-
+    // todo before i forget, the things my laptop FUCKING WIPED
+    // add public static final String constants for the triggerable anims
+    // rename canChangeSmoothly to isExpired and consider whether the thing can expire
+    // reinstate the BehaviorState transitionTo workflow and implement that tick method
+    // reimplement the consecutive dodges ticks system
+    // fucking hell. HOW DO YUOU JUST. SHUT ODWN SUDDENLY. HOW.
+    // commit now commit now
 
     public AmelieEntity(EntityType<? extends Monster> entityType, Level level) {
         super(entityType, level);
@@ -60,6 +66,11 @@ public class AmelieEntity extends FlyingFoliantRaidMob implements GeoEntity {
         goalSelector.addGoal(goalIndex++, new AmelieStrafingRunGoal(this));
 
         targetSelector.addGoal(targetIndex++, new NearestAttackableTargetGoal<>(this, Player.class, false));
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -130,7 +141,6 @@ public class AmelieEntity extends FlyingFoliantRaidMob implements GeoEntity {
     }
 
     public BehaviorState getBehaviorState() {
-
         if (level().isClientSide()) {
             String state = getAnimData(BEHAVIOR_STATE);
             if (state == null) behaviorState = BehaviorState.IDLE;
