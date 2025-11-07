@@ -40,8 +40,12 @@ public class AmelieEntity extends FlyingFoliantRaidMob implements GeoEntity {
     public static final int MAX_CONSECUTIVE_DODGES = 2;
     public static final int CONSECUTIVE_DODGE_TIMEOUT = 60;
 
+    public static final String ANIM_DODGE_CONTROLLER = "Dodge";
+    public static final String ANIM_DODGE_TRIGGER = "Dodge";
+    public static final String ANIM_TAUNT_CONTROLLER = "Taunt";
+    public static final String ANIM_TAUNT_TRIGGER = "Taunt";
+
     // todo before i forget, the things my laptop FUCKING WIPED
-    // add public static final String constants for the triggerable anims
     // rename canChangeSmoothly to isExpired and consider whether the thing can expire
     // reinstate the BehaviorState transitionTo workflow and implement that tick method
     // reimplement the consecutive dodges ticks system
@@ -68,17 +72,38 @@ public class AmelieEntity extends FlyingFoliantRaidMob implements GeoEntity {
         targetSelector.addGoal(targetIndex++, new NearestAttackableTargetGoal<>(this, Player.class, false));
     }
 
-    @Override
-    public void tick() {
-        super.tick();
-    }
-
     public static AttributeSupplier.Builder createAttributes() {
         return createMobAttributes()
                 .add(Attributes.MAX_HEALTH, 12)
                 .add(Attributes.FOLLOW_RANGE, 32)
                 .add(Attributes.FLYING_SPEED, 4)
                 .add(Attributes.ATTACK_DAMAGE, 4);
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+
+        tickConsecutiveDodges();
+        checkIfShouldAutoTransitionBehaviorState();
+    }
+
+    public void tickConsecutiveDodges() {
+        if (level().isClientSide()) return;
+        if (!hasDodgedRecently()) return;
+
+        if (canResetConsecutiveDodges()) resetConsecutiveDodges();
+        else ticksWithoutDodge++;
+    }
+
+    // :3
+    public void checkIfShouldAutoTransitionBehaviorState() {
+        if (level().isClientSide()) return;
+        BehaviorState state = getBehaviorState();
+
+        if (!state.canTransition(this)) return;
+
+        setBehaviorState(state.getTransitionTo());
     }
 
     @Override
@@ -137,8 +162,22 @@ public class AmelieEntity extends FlyingFoliantRaidMob implements GeoEntity {
         addDeltaMovement(new Vec3(addedMovement));
         setBehaviorState(BehaviorState.DODGING);
         setAnimData(IS_DODGING_LEFT, isDodgingLeft ? -1 : 1);
-        triggerAnim("Dodge", "Dodge");
+        triggerAnim(ANIM_DODGE_CONTROLLER, ANIM_DODGE_TRIGGER);
     }
+
+    public boolean hasDodgedRecently() {
+        return consecutiveDodges > 0;
+    }
+
+    public boolean canResetConsecutiveDodges() {
+        return ticksWithoutDodge > CONSECUTIVE_DODGE_TIMEOUT;
+    }
+
+    public void resetConsecutiveDodges() {
+        consecutiveDodges = 0;
+    }
+
+
 
     public BehaviorState getBehaviorState() {
         if (level().isClientSide()) {
@@ -161,7 +200,7 @@ public class AmelieEntity extends FlyingFoliantRaidMob implements GeoEntity {
     }
 
     public boolean canSmoothlyChangeBehaviorState() {
-        return getBehaviorState().canSmoothlyChange(this);
+        return getBehaviorState().isExpired(this);
     }
 
     public static final RawAnimation BEAK_SPIN = RawAnimation.begin().thenLoop("misc.beak_spin");
@@ -180,7 +219,7 @@ public class AmelieEntity extends FlyingFoliantRaidMob implements GeoEntity {
         }));
 
         // doing it this way instead of using my RenderUtils billboard thing, because im really lazy :)
-        controllers.add(new AnimationController<>(this, "FaceBillboard", 10, state -> {
+        controllers.add(new AnimationController<>(this, "FaceBillboard", 0, state -> {
             return state.setAndContinue(FACE_BILLBOARD);
         }));
 
@@ -192,9 +231,13 @@ public class AmelieEntity extends FlyingFoliantRaidMob implements GeoEntity {
         }));
 
 
-        controllers.add(new AnimationController<>(this, "Dodge", 10, state -> {
+        controllers.add(new AnimationController<>(this, ANIM_DODGE_CONTROLLER, 10, state -> {
             return PlayState.CONTINUE;
-        }).triggerableAnim("dodge", DODGE));
+        }).triggerableAnim(ANIM_DODGE_TRIGGER, DODGE));
+
+        controllers.add(new AnimationController<>(this, ANIM_TAUNT_CONTROLLER, 10, state -> {
+            return PlayState.CONTINUE;
+        }).triggerableAnim(ANIM_TAUNT_CONTROLLER, TAUNT));
     }
 
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
@@ -204,25 +247,35 @@ public class AmelieEntity extends FlyingFoliantRaidMob implements GeoEntity {
     }
 
     public enum BehaviorState {
-        IDLE(-1),
-        SPOOLING_UP(60),
-        FIRING(15),
-        DODGING(15),
-        TAUNTING(40);
+        IDLE(-1, null),
+        FIRING(15, IDLE),
+        SPOOLING_UP(60, FIRING),
+        DODGING(15, IDLE),
+        TAUNTING(40, IDLE);
 
-        final int ticks;
-        BehaviorState(int ticks) {
+        private final int ticks;
+        private final BehaviorState transitionTo;
+        BehaviorState(int ticks, BehaviorState transitionTo) {
             this.ticks = ticks;
+            this.transitionTo = transitionTo;
         }
 
-        public boolean canSmoothlyChange(AmelieEntity amelie) {
+        public boolean isExpired(AmelieEntity amelie) {
             long timestamp = amelie.getTimestampOfLastBehaviorChange();
             long currentTime = amelie.level().getGameTime();
-            return ticks < 0 || currentTime - timestamp > ticks;
+            return (getTicks() > 0) || currentTime - timestamp > getTicks();
+        }
+
+        public boolean canTransition(AmelieEntity amelie) {
+            return isExpired(amelie) && getTransitionTo() != null;
         }
 
         public int getTicks() {
             return ticks;
+        }
+
+        public BehaviorState getTransitionTo() {
+            return transitionTo;
         }
     }
 
