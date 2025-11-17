@@ -102,7 +102,6 @@ public abstract class FoliantRaidMob extends Monster {
     public boolean recievesDamageScalingWithPower() {
         return true;
     }
-
     public boolean recievesSpeedScalingWithPower() {
         return true;
     }
@@ -238,6 +237,7 @@ public abstract class FoliantRaidMob extends Monster {
         return ticksWantedParentRaidButAlone > TICKS_UNTIL_DIE_OF_LONELINESS && needsParentRaid() && (!isInRaid() || getParentRaid().isPoop());
     }
 
+    // todo implement
     public void tickPowerBuffs() {
         if (tickCount % 200 > 0) return;
         if (!isInRaid()) return;
